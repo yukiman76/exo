@@ -9,5 +9,6 @@ if [ -z "$node_id" ]; then
     exit 1
 fi
 
+source .venv/bin/activate
 # Run the exo command with DEBUG=9 and the provided node ID
 DEBUG=9 exo --node-id "$node_id"
