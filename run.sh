@@ -1,5 +1,5 @@
 #!/bin/bash
-
+git pull
 # Prompt user for node ID
 read -p "Enter the node ID: " node_id
 
