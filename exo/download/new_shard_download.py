@@ -188,8 +188,9 @@ async def resolve_allow_patterns(shard: Shard, inference_engine_classname: str) 
     weight_map = await get_weight_map(get_repo(shard.model_id, inference_engine_classname))
     return get_allow_patterns(weight_map, shard)
   except:
-    if DEBUG >= 1: print(f"Error getting weight map for {shard.model_id=} and inference engine {inference_engine_classname}")
-    if DEBUG >= 1: traceback.print_exc()
+  #   we do not need to muddy the logs
+  #   if DEBUG >= 1: print(f"Error getting weight map for {shard.model_id=} and inference engine {inference_engine_classname}")
+  #   if DEBUG >= 1: traceback.print_exc()
     return ["*"]
 
 async def get_downloaded_size(path: Path) -> int:
