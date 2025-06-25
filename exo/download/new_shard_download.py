@@ -20,6 +20,9 @@ import traceback
 import shutil
 import tempfile
 import hashlib
+# for testing
+import traceback
+
 
 def exo_home() -> Path:
   return Path(os.environ.get("EXO_HOME", Path.home()/".cache"/"exo"))
@@ -129,6 +132,14 @@ async def file_meta(repo_id: str, revision: str, path: str) -> Tuple[int, str]:
       return content_length, etag
 
 async def download_file_with_retry(repo_id: str, revision: str, path: str, target_dir: Path, on_progress: Callable[[int, int], None] = lambda _, __: None) -> Path:
+  print("=== DEBUG: Attempting to download ===")
+  print(f"repo_id: {repo_id}")
+  print(f"revision: {revision}")
+  print(f"path: {path}")
+  print("Call stack:")
+  traceback.print_stack()
+  print("=== END DEBUG ===")
+    
   n_attempts = 30
   for attempt in range(n_attempts):
     try: return await _download_file(repo_id, revision, path, target_dir, on_progress)
@@ -152,8 +163,14 @@ async def _download_file(repo_id: str, revision: str, path: str, target_dir: Pat
     n_read = resume_byte_pos or 0
     async with aiohttp.ClientSession(timeout=aiohttp.ClientTimeout(total=1800, connect=60, sock_read=1800, sock_connect=60)) as session:
       async with session.get(url, headers=headers, timeout=aiohttp.ClientTimeout(total=1800, connect=60, sock_read=1800, sock_connect=60)) as r:
-        if r.status == 404: raise FileNotFoundError(f"File not found: {url}")
-        assert r.status in [200, 206], f"Failed to download {path} from {url}: {r.status}"
+        # if r.status == 404: raise FileNotFoundError(f"File not found: {url}")
+        # assert r.status in [200, 206], f"Failed to download {path} from {url}: {r.status}"
+        if r.status == 401:
+            raise Exception(f"Authentication required for {url}. Status: {r.status}")
+        elif r.status == 404:
+            raise Exception(f"Model not found at {url}. Status: {r.status}")
+        elif r.status not in [200, 206]:
+            raise Exception(f"Failed to download {path} from {url}: {r.status}")
         async with aiofiles.open(partial_path, 'ab' if resume_byte_pos else 'wb') as f:
           while chunk := await r.content.read(8 * 1024 * 1024): on_progress(n_read := n_read + await f.write(chunk), length)
 
